@@ -182,10 +182,14 @@
 
     document.querySelectorAll(".mode-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        answerMode = btn.dataset.mode;
+        const nextMode = btn.dataset.mode;
+        if (nextMode === answerMode) return;
+        answerMode = nextMode;
         document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b === btn));
         $("genMode").textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
         $("aiBox").classList.toggle("show", answerMode === "ai");
+        loadingEl.classList.remove("show");
+        outputEl.innerHTML = `<p class="empty">已切换为${answerMode === "ai" ? "AI 生成" : "抽取式"}模式，请重新提问。</p>`;
       });
     });
 
