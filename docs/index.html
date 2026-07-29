@@ -305,7 +305,7 @@
       return score;
     }
 
-    function search(question, topK = 4) {
+    function search(question, topK = 5) {
       const keywords = extractKeywords(question);
       if (!keywords.length) return [];
       const ranked = kb.chunks
