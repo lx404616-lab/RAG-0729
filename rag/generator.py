@@ -32,7 +32,7 @@ GENERATIVE_PROMPT = """你是一个严谨的知识库问答助手。请基于以
 
 要求：
 1. 优先使用参考资料中的信息，禁止编造
-2. 引用内容请在回答末尾标注[引用N]，如为分点作答，在每点作答末尾标注[引用N]；如果索引内容一致，回答末尾只需标注一条引用标注，并在回答内容后补充提醒：（注：[引用N]与[引用N]结果一致，故回答中仅注明第一条引用）
+2. 引用内容请在回答末尾标注[引用N]，如为分点作答，在每点作答末尾标注[引用N]；如果索引内容一致，回答末尾只需标注一条引用标注，并在回答内容后换行补充提醒：（注：[引用N]与[引用N]结果一致，故回答中仅注明第一条引用）
 3. 若资料矛盾，请指出并说明依据
 4. 回答简洁，控制在300字以内
 
@@ -116,6 +116,26 @@ def _is_near_duplicate(a: str, b: str) -> bool:
     return len(shorter) >= 20 and shorter in longer
 
 
+def _hits_content_consistent(hits: list[tuple[Chunk, float]]) -> bool:
+    """判断检索命中片段正文是否实质一致（去编号前缀后近似重复）。"""
+    if len(hits) <= 1:
+        return False
+    bodies = [_clean_sentence(c.body.replace("\n", "")) for c, _ in hits]
+    bodies = [b for b in bodies if len(b) >= 20]
+    if len(bodies) <= 1:
+        return False
+    first = bodies[0]
+    return all(_is_near_duplicate(first, b) for b in bodies[1:])
+
+
+def _consistent_cite_note(hit_count: int) -> str:
+    """索引内容一致时的引用合并提醒。"""
+    if hit_count <= 1:
+        return ""
+    joined = "与".join(f"[引用{i}]" for i in range(1, hit_count + 1))
+    return f"\n（注：{joined}结果一致，故回答中仅注明第一条引用）"
+
+
 def _clean_sentence(sent: str) -> str:
     """清理抽取句：去掉编号前缀与残缺开头。"""
     sent = sent.strip(" \n\r\t；，、")
@@ -161,11 +181,19 @@ def _extractive_answer(question: str, hits: list[tuple[Chunk, float]]) -> str:
             return REFUSE_TEXT
         selected = [(first, 1)]
 
-    bullets = []
+    consistent = _hits_content_consistent(hits)
+    bullets: list[str] = []
     for sent, ref_idx in selected:
         if not sent.endswith(("。", "！", "？", "；")):
             sent += "。"
-        bullets.append(f"- {sent}[引用{ref_idx}]")
+        if consistent:
+            bullets.append(f"- {sent}")
+        else:
+            bullets.append(f"- {sent}[引用{ref_idx}]")
+
+    answer_body = "\n".join(bullets)
+    if consistent:
+        answer_body = f"{answer_body}\n[引用1]{_consistent_cite_note(len(hits))}"
 
     cite_map = []
     for i, (chunk, score) in enumerate(hits, 1):
@@ -173,7 +201,7 @@ def _extractive_answer(question: str, hits: list[tuple[Chunk, float]]) -> str:
 
     return (
         "【抽取式整理】以下要点根据检索片段归纳，未经大模型生成改写：\n"
-        + "\n".join(bullets)
+        + answer_body
         + "\n\n引用对照：\n"
         + "\n".join(cite_map)
     )
