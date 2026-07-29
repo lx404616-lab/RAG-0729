@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>星澜-知识问答系统</title>
+  <title>星澜RAG知识问答系统演示</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -34,7 +34,7 @@
     }
     .wrap { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 48px; }
     .brand {
-      font-family: "SimHei", "Heiti SC", "STHeiti", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      font-family: Fraunces, "Noto Serif SC", serif;
       font-size: clamp(2rem, 5vw, 3rem);
       font-weight: 700;
       margin: 0 0 8px;
@@ -122,7 +122,7 @@
 <body>
   <div class="wrap">
     <header>
-      <h1 class="brand">星澜-<span>知识问答系统</span></h1>
+      <h1 class="brand">星澜<span>RAG</span>知识问答系统演示</h1>
       <p class="lead">GitHub Pages 静态部署版：浏览器端检索知识库并回答。AI 模式可选用 DeepSeek（需自备 Key；若遇跨域限制请用本地 Flask）。</p>
       <div class="meta">
         <span>索引片段：<b id="chunkCount">加载中…</b></span>
