@@ -42,8 +42,8 @@ CHUNK_OVERLAP = 100
 CHUNK_SOFT_EXTEND = 100
 
 # 检索
-TOP_K = 4
-SCORE_THRESHOLD = 0.55
+TOP_K = 5
+SCORE_THRESHOLD = 0.52
 
 # 向量化（BGE 稠密向量 Embedding）
 BGE_MODEL_NAME = os.getenv("BGE_MODEL_NAME", "BAAI/bge-small-zh-v1.5")

@@ -55,25 +55,22 @@ _DOMAIN_TERMS = [
 ]
 
 
-def _unique_citations(hits: list[tuple[Chunk, float]]) -> list[dict]:
-    """按来源+路径去重，保留最高分，并编号为引用N。"""
-    best: dict[str, dict] = {}
-    for chunk, score in hits:
-        key = f"{chunk.source}|{chunk.title_path}"
-        item = {
-            "source": chunk.source,
-            "section": chunk.section,
-            "title_path": chunk.title_path,
-            "chunk_id": chunk.chunk_id,
-            "score": round(score, 4),
-            "snippet": chunk.body[:160].replace("\n", " "),
-        }
-        if key not in best or score > best[key]["score"]:
-            best[key] = item
-    ordered = sorted(best.values(), key=lambda x: x["score"], reverse=True)
-    for i, item in enumerate(ordered, 1):
-        item["ref"] = i
-    return ordered
+def _build_citations(hits: list[tuple[Chunk, float]]) -> list[dict]:
+    """按检索命中顺序构造引用列表（与 [引用N] / 引用对照一一对应，不去重）。"""
+    citations: list[dict] = []
+    for i, (chunk, score) in enumerate(hits, 1):
+        citations.append(
+            {
+                "ref": i,
+                "source": chunk.source,
+                "section": chunk.section,
+                "title_path": chunk.title_path,
+                "chunk_id": chunk.chunk_id,
+                "score": round(score, 4),
+                "snippet": chunk.body[:160].replace("\n", " "),
+            }
+        )
+    return citations
 
 
 def _format_context(hits: list[tuple[Chunk, float]]) -> str:
@@ -269,7 +266,7 @@ def generate_answer(
       - ai / generative: 强制走大模型生成式
       - extractive: 强制走本地抽取式整理
     """
-    citations = _unique_citations(hits) if hits else []
+    citations = _build_citations(hits) if hits else []
     mode = (answer_mode or "ai").strip().lower()
     if mode in {"generative", "llm", "deepseek"}:
         mode = "ai"

@@ -1,0 +1,494 @@
+{
+  "name": "星澜知识库RAG评测集",
+  "version": "1.0",
+  "description": "基于知识库/下8份Markdown文档中的可核验事实编制。正文高度复用，故可答题以共享事实为准；拒答题用于检验无依据时是否明确无法回答。",
+  "refuse_text": "根据现有知识库，我无法回答该问题。",
+  "note": "评分建议：可答题检查是否覆盖 expected_keywords 中全部关键词（同义表述可接受）；拒答题检查 answerable=false 且回答含拒答语义。",
+  "stats": {
+    "total": 48,
+    "answerable": 40,
+    "refuse": 8
+  },
+  "items": [
+    {
+      "id": "Q001",
+      "category": "产品定位",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "星澜知识库是什么产品？",
+      "expected_answer": "企业级RAG知识管理产品。",
+      "expected_keywords": ["企业级", "RAG", "知识管理"],
+      "preferred_sources": ["01_公司介绍.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q002",
+      "category": "文档导入",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "星澜知识库支持哪些文档格式导入？",
+      "expected_answer": "支持PDF、Word、PPT、TXT、Markdown文档导入。",
+      "expected_keywords": ["PDF", "Word", "PPT", "TXT", "Markdown"],
+      "preferred_sources": ["02_产品白皮书.md", "03_用户手册.md"]
+    },
+    {
+      "id": "Q003",
+      "category": "版本规格",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "标准版最多支持多少个文档和多少名用户？",
+      "expected_answer": "标准版支持5万个文档、50名用户。",
+      "expected_keywords": ["5万", "50"],
+      "preferred_sources": ["01_公司介绍.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q004",
+      "category": "版本规格",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "标准版的文档容量上限和并发用户规模分别是多少？",
+      "expected_answer": "标准版支持5万个文档、50名用户。",
+      "expected_keywords": ["5万", "50"],
+      "preferred_sources": ["01_公司介绍.md"]
+    },
+    {
+      "id": "Q005",
+      "category": "企业版能力",
+      "type": "列举",
+      "answerable": true,
+      "question": "企业版相对标准版有哪些核心能力？",
+      "expected_answer": "私有化部署、单点登录（SSO）、LDAP同步、按部门权限控制、专属客户成功经理以及7×24小时支持。",
+      "expected_keywords": ["私有化", "SSO", "LDAP", "部门权限", "客户成功", "7×24"],
+      "preferred_sources": ["02_产品白皮书.md", "05_数据安全规范.md"]
+    },
+    {
+      "id": "Q006",
+      "category": "企业版能力",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "企业版是否支持单点登录和LDAP同步？",
+      "expected_answer": "是，企业版支持SSO与LDAP同步。",
+      "expected_keywords": ["SSO", "LDAP"],
+      "preferred_sources": ["02_产品白皮书.md", "05_数据安全规范.md"]
+    },
+    {
+      "id": "Q007",
+      "category": "企业版能力",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版是否支持按部门做权限控制？",
+      "expected_answer": "支持按部门权限控制。",
+      "expected_keywords": ["部门", "权限"],
+      "preferred_sources": ["02_产品白皮书.md", "05_数据安全规范.md"]
+    },
+    {
+      "id": "Q008",
+      "category": "支持服务",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版的支持服务时间是怎样的？",
+      "expected_answer": "企业版提供7×24小时支持，并有专属客户成功经理。",
+      "expected_keywords": ["7×24"],
+      "preferred_sources": ["08_内部公告.md", "04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q009",
+      "category": "数据安全",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "系统默认采用哪些加密措施？",
+      "expected_answer": "所有数据默认采用传输加密和存储加密。",
+      "expected_keywords": ["传输加密", "存储加密"],
+      "preferred_sources": ["05_数据安全规范.md"]
+    },
+    {
+      "id": "Q010",
+      "category": "数据安全",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "数据在传输和落盘时是否加密？",
+      "expected_answer": "默认采用传输加密和存储加密。",
+      "expected_keywords": ["传输加密", "存储加密"],
+      "preferred_sources": ["05_数据安全规范.md"]
+    },
+    {
+      "id": "Q011",
+      "category": "私有化部署",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版部署在客户云环境时，数据会不会上传到公共服务器？",
+      "expected_answer": "不会，数据不会上传至公共服务器。",
+      "expected_keywords": ["不会上传", "公共服务器"],
+      "preferred_sources": ["05_数据安全规范.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q012",
+      "category": "备份",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "增量备份和全量备份的频率分别是多少？",
+      "expected_answer": "每天执行增量备份，每30天执行一次全量备份。",
+      "expected_keywords": ["每天", "增量", "30天", "全量"],
+      "preferred_sources": ["05_数据安全规范.md", "04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q013",
+      "category": "备份",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "系统多久做一次全量备份？",
+      "expected_answer": "每30天执行一次全量备份。",
+      "expected_keywords": ["30天", "全量"],
+      "preferred_sources": ["05_数据安全规范.md"]
+    },
+    {
+      "id": "Q014",
+      "category": "维护窗口",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "计划维护通常安排在什么时间？",
+      "expected_answer": "通常安排在周日凌晨2:00至5:00。",
+      "expected_keywords": ["周日", "2:00", "5:00"],
+      "preferred_sources": ["04_SLA与运维规范.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q015",
+      "category": "维护窗口",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "计划维护会提前多久通知客户？",
+      "expected_answer": "提前48小时通知客户。",
+      "expected_keywords": ["48小时"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q016",
+      "category": "运维响应",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版严重故障的首次响应时间要求是多少？",
+      "expected_answer": "不超过30分钟。",
+      "expected_keywords": ["30分钟"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q017",
+      "category": "SLA",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "标准版年度SLA是多少？",
+      "expected_answer": "标准版年度SLA为99.5%。",
+      "expected_keywords": ["99.5%"],
+      "preferred_sources": ["04_SLA与运维规范.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q018",
+      "category": "SLA",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版年度SLA是多少？",
+      "expected_answer": "企业版年度SLA为99.9%。",
+      "expected_keywords": ["99.9%"],
+      "preferred_sources": ["04_SLA与运维规范.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q019",
+      "category": "SLA",
+      "type": "对比",
+      "answerable": true,
+      "question": "标准版和企业版的年度SLA分别是多少？有何差异？",
+      "expected_answer": "标准版99.5%，企业版99.9%，企业版更高。",
+      "expected_keywords": ["99.5%", "99.9%"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q020",
+      "category": "SLA",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "企业版一年的服务可用性承诺是多少？",
+      "expected_answer": "企业版年度SLA为99.9%。",
+      "expected_keywords": ["99.9%"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q021",
+      "category": "退款政策",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "个人版的退款政策是什么？",
+      "expected_answer": "个人版7天内可退款，但使用量超过20%除外。",
+      "expected_keywords": ["7天", "20%"],
+      "preferred_sources": ["01_公司介绍.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q022",
+      "category": "退款政策",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "企业版退款如何执行？",
+      "expected_answer": "企业版按合同执行。",
+      "expected_keywords": ["合同"],
+      "preferred_sources": ["01_公司介绍.md"]
+    },
+    {
+      "id": "Q023",
+      "category": "退款政策",
+      "type": "边界条件",
+      "answerable": true,
+      "question": "个人版购买后使用量已超过20%，还能在7天内退款吗？",
+      "expected_answer": "不能，使用量超过20%除外，不适用该退款条件。",
+      "expected_keywords": ["20%"],
+      "preferred_sources": ["01_公司介绍.md"]
+    },
+    {
+      "id": "Q024",
+      "category": "检索最佳实践",
+      "type": "列举",
+      "answerable": true,
+      "question": "为获得更好的检索效果，文档侧有哪些建议？",
+      "expected_answer": "建议控制Chunk大小、保留标题结构、配置合理Top-K，并根据业务场景选择Embedding模型。",
+      "expected_keywords": ["Chunk", "标题", "Top-K", "Embedding"],
+      "preferred_sources": ["03_用户手册.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q025",
+      "category": "产品能力",
+      "type": "列举",
+      "answerable": true,
+      "question": "系统在问答与检索方面支持哪些能力？",
+      "expected_answer": "支持引用来源展示、多轮问答、权限过滤以及混合检索。",
+      "expected_keywords": ["引用", "多轮", "权限过滤", "混合检索"],
+      "preferred_sources": ["02_产品白皮书.md", "03_用户手册.md"]
+    },
+    {
+      "id": "Q026",
+      "category": "实施建议",
+      "type": "列举",
+      "answerable": true,
+      "question": "实施过程中提高知识库质量有哪些建议？",
+      "expected_answer": "优先整理文档结构、统一命名规范，并定期清理过期资料。",
+      "expected_keywords": ["文档结构", "命名", "过期"],
+      "preferred_sources": ["06_客户案例.md", "03_用户手册.md"]
+    },
+    {
+      "id": "Q027",
+      "category": "企业版能力",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "星澜知识库企业版支持私有化部署吗？",
+      "expected_answer": "支持私有化部署。",
+      "expected_keywords": ["私有化"],
+      "preferred_sources": ["05_数据安全规范.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q028",
+      "category": "文档导入",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "可以导入Markdown文档吗？",
+      "expected_answer": "可以，支持Markdown导入。",
+      "expected_keywords": ["Markdown"],
+      "preferred_sources": ["03_用户手册.md"]
+    },
+    {
+      "id": "Q029",
+      "category": "运维响应",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "发生严重故障时，企业版要求多久内首次响应？",
+      "expected_answer": "首次响应时间不超过30分钟。",
+      "expected_keywords": ["30分钟"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q030",
+      "category": "维护窗口",
+      "type": "改写提问",
+      "answerable": true,
+      "question": "周日凌晨做计划维护需要提前通知吗？提前多久？",
+      "expected_answer": "需要，提前48小时通知；维护窗口为周日凌晨2:00至5:00。",
+      "expected_keywords": ["48小时", "周日"],
+      "preferred_sources": ["04_SLA与运维规范.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q031",
+      "category": "备份",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "系统是否每天都会做增量备份？",
+      "expected_answer": "是，每天执行增量备份。",
+      "expected_keywords": ["每天", "增量"],
+      "preferred_sources": ["05_数据安全规范.md"]
+    },
+    {
+      "id": "Q032",
+      "category": "产品能力",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "回答是否可以展示引用来源？",
+      "expected_answer": "支持引用来源展示。",
+      "expected_keywords": ["引用"],
+      "preferred_sources": ["02_产品白皮书.md", "03_用户手册.md"]
+    },
+    {
+      "id": "Q033",
+      "category": "产品能力",
+      "type": "是非确认",
+      "answerable": true,
+      "question": "是否支持混合检索和多轮问答？",
+      "expected_answer": "支持混合检索与多轮问答。",
+      "expected_keywords": ["混合检索", "多轮"],
+      "preferred_sources": ["02_产品白皮书.md"]
+    },
+    {
+      "id": "Q034",
+      "category": "检索最佳实践",
+      "type": "事实抽取",
+      "answerable": true,
+      "question": "选择Embedding模型时应该考虑什么？",
+      "expected_answer": "根据业务场景选择Embedding模型。",
+      "expected_keywords": ["业务场景", "Embedding"],
+      "preferred_sources": ["03_用户手册.md"]
+    },
+    {
+      "id": "Q035",
+      "category": "版本规格",
+      "type": "对比",
+      "answerable": true,
+      "question": "标准版用户数上限是多少？企业版在权限与部署上有何不同？",
+      "expected_answer": "标准版50名用户；企业版支持私有化部署、SSO、LDAP、按部门权限控制等。",
+      "expected_keywords": ["50", "私有化", "SSO"],
+      "preferred_sources": ["01_公司介绍.md", "02_产品白皮书.md"]
+    },
+    {
+      "id": "Q036",
+      "category": "综合",
+      "type": "多要点",
+      "answerable": true,
+      "question": "从可用性与故障响应看，企业版有哪些承诺？",
+      "expected_answer": "年度SLA为99.9%；严重故障首次响应不超过30分钟；并提供7×24支持。",
+      "expected_keywords": ["99.9%", "30分钟", "7×24"],
+      "preferred_sources": ["04_SLA与运维规范.md", "08_内部公告.md"]
+    },
+    {
+      "id": "Q037",
+      "category": "综合",
+      "type": "多要点",
+      "answerable": true,
+      "question": "数据安全方面有哪些默认保障？私有化场景如何保证数据不出客户环境？",
+      "expected_answer": "默认传输与存储加密；企业版部署在客户云时数据不上传公共服务器。",
+      "expected_keywords": ["传输加密", "存储加密", "不会上传"],
+      "preferred_sources": ["05_数据安全规范.md"]
+    },
+    {
+      "id": "Q038",
+      "category": "章节检索",
+      "type": "路径相关",
+      "answerable": true,
+      "question": "用户手册里关于提升检索效果的最佳实践有哪些？",
+      "expected_answer": "控制Chunk大小、保留标题结构、配置合理Top-K，按业务场景选择Embedding。",
+      "expected_keywords": ["Chunk", "Top-K", "Embedding"],
+      "preferred_sources": ["03_用户手册.md"]
+    },
+    {
+      "id": "Q039",
+      "category": "章节检索",
+      "type": "路径相关",
+      "answerable": true,
+      "question": "SLA与运维规范中，计划维护窗口与通知要求是什么？",
+      "expected_answer": "周日凌晨2:00至5:00，提前48小时通知。",
+      "expected_keywords": ["周日", "2:00", "5:00", "48小时"],
+      "preferred_sources": ["04_SLA与运维规范.md"]
+    },
+    {
+      "id": "Q040",
+      "category": "章节检索",
+      "type": "路径相关",
+      "answerable": true,
+      "question": "客户案例实施经验里，怎样提高知识库质量？",
+      "expected_answer": "整理文档结构、统一命名规范、定期清理过期资料。",
+      "expected_keywords": ["文档结构", "命名", "过期"],
+      "preferred_sources": ["06_客户案例.md"]
+    },
+    {
+      "id": "R001",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "星澜知识库的创始人是谁？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R002",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "星澜知识库企业版一年多少钱？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R003",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "公司总部在哪个城市？员工总人数是多少？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R004",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "v2.3版本具体新增了哪些功能？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R005",
+      "category": "拒答",
+      "type": "无关问题",
+      "answerable": false,
+      "question": "今天北京的天气怎么样？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R006",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "星澜知识库是否支持Oracle数据库直连同步？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R007",
+      "category": "拒答",
+      "type": "库外事实",
+      "answerable": false,
+      "question": "标准版严重故障的首次响应时间是多少？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    },
+    {
+      "id": "R008",
+      "category": "拒答",
+      "type": "库外对比",
+      "answerable": false,
+      "question": "与竞品Notion AI相比，星澜知识库市场份额谁更高？",
+      "expected_answer": "根据现有知识库，我无法回答该问题。",
+      "expected_keywords": ["无法回答"],
+      "preferred_sources": []
+    }
+  ]
+}

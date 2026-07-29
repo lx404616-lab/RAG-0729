@@ -10,7 +10,7 @@
    - **AI 生成式**：配置 `DEEPSEEK_API_KEY` 后，使用规定 Prompt 调用 **DeepSeek V4 Flash**；
    - **抽取式**：本地对检索片段做要点整理并标注 `[引用N]`，避免原文整段直出（无需 API Key）。
 4. **展示引用文档**：输出文件名、标题路径、相似度与摘要。
-5. **无法回答时明确说明**：最高相似度 `< 0.55` 时返回「根据现有知识库，我无法回答该问题。」
+5. **无法回答时明确说明**：最高相似度 `< 0.52` 时返回「根据现有知识库，我无法回答该问题。」
 
 ## 环境要求
 
@@ -73,8 +73,14 @@ py -3 app.py
 ### 命令行
 
 ```bash
+# AI 生成式（需配置 DEEPSEEK_API_KEY）
+py -3 main.py --mode ai -q "企业版年度SLA是多少？"
+
+# 抽取式 / 非 AI（无需 API Key）
+py -3 main.py --mode extractive -q "企业版年度SLA是多少？"
+
+# 其他常用参数
 py -3 main.py --rebuild          # 强制重建 BGE 索引并交互问答
-py -3 main.py -q "企业版年度SLA是多少？"
 py -3 main.py --demo             # 内置演示（含无法回答样例）
 py -3 main.py --mode extractive --demo
 ```
@@ -96,8 +102,8 @@ py -3 scripts/export_static_kb.py
 | `CHUNK_SIZE` | `480` | 切分块最大字符数 |
 | `CHUNK_OVERLAP` | `100` | 滑动窗口重叠 |
 | `CHUNK_SOFT_EXTEND` | `100` | 为凑整句允许的软扩展 |
-| `TOP_K` | `4` | 检索返回片段数 |
-| `SCORE_THRESHOLD` | `0.55` | BGE 余弦相似度拒答阈值 |
+| `TOP_K` | `5` | 检索返回片段数 |
+| `SCORE_THRESHOLD` | `0.52` | BGE 余弦相似度拒答阈值 |
 | `BGE_MODEL_NAME` | `BAAI/bge-small-zh-v1.5` | 稠密向量模型 |
 | `BGE_QUERY_INSTRUCTION` | `为这个句子生成表示以用于检索相关文章：` | 查询前缀 |
 | `BGE_BATCH_SIZE` | `32` | 编码 batch |
@@ -179,7 +185,7 @@ py -3 scripts/export_static_kb.py
 
 ## 拒答策略
 
-当检索结果为空，或最高余弦相似度 `< 0.55` 时，返回：
+当检索结果为空，或最高余弦相似度 `< 0.52` 时，返回：
 
 > 根据现有知识库，我无法回答该问题。
 

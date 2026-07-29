@@ -364,7 +364,7 @@
       </div>
     </section>
 
-    <footer>AI 模式调用 DeepSeek V4 Flash；抽取式为本地要点整理。拒答阈值：BGE 余弦相似度 0.55。</footer>
+    <footer>AI 模式调用 DeepSeek V4 Flash；抽取式为本地要点整理。拒答阈值：BGE 余弦相似度 0.52。</footer>
   </div>
 
   <script>
@@ -458,11 +458,12 @@
 
       if (data.citations && data.citations.length) {
         html += `<div class="citations"><h3>引用文档</h3>`;
-        data.citations.forEach((c, i) => {
+        data.citations.forEach((c) => {
+          const ref = c.ref != null ? c.ref : "";
           html += `
             <div class="cite">
-              <div class="cite-title">${i + 1}. ${escapeHtml(c.source)}</div>
-              <div class="cite-meta">章节：${escapeHtml(c.section || c.title_path || "")} · 相似度：${c.score} · 片段：${escapeHtml(c.chunk_id)}</div>
+              <div class="cite-title">[引用${ref}] ${escapeHtml(c.source)}</div>
+              <div class="cite-meta">路径：${escapeHtml(c.title_path || c.section || "")} · 相似度：${c.score} · 片段：${escapeHtml(c.chunk_id)}</div>
               <div class="cite-snip">${escapeHtml(c.snippet || "")}</div>
             </div>
           `;

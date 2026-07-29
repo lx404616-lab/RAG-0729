@@ -103,13 +103,14 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"[信息] 工作目录: {root}")
     print(f"[信息] 回答模式: {mode}")
-    print(f"[信息] DeepSeek API Key: {'已配置' if has_key else '未配置'}")
-    if mode == "ai" and not has_key:
-        print(
-            "[警告] 未检测到 DEEPSEEK_API_KEY。"
-            "AI 模式将失败并自动降级为抽取式；"
-            "也可加 --mode extractive，或在项目根目录配置 .env。"
-        )
+    if mode == "ai":
+        print(f"[信息] DeepSeek API Key: {'已配置' if has_key else '未配置'}")
+        if not has_key:
+            print(
+                "[警告] 未检测到 DEEPSEEK_API_KEY。"
+                "AI 模式将失败并自动降级为抽取式；"
+                "也可加 --mode extractive，或在项目根目录配置 .env。"
+            )
     sys.stdout.flush()
 
     try:
