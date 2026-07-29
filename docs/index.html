@@ -357,15 +357,32 @@
         const first = cleanSent(hits[0].chunk.body.split("。")[0] + "。");
         picked.push({ s: first, ref: 1 });
       }
+      const nearDup = (a, b) => {
+        const norm = (s) => s.replace(/^[\u4e00-\u9fff]{2,12}内容\d+：/, "");
+        const na = norm(a), nb = norm(b);
+        if (na === nb) return true;
+        const [shorter, longer] = na.length <= nb.length ? [na, nb] : [nb, na];
+        return shorter.length >= 20 && longer.includes(shorter);
+      };
+      const bodies = hits
+        .map((h) => cleanSent(h.chunk.body.replace(/\n/g, "")))
+        .filter((b) => b.length >= 20);
+      const consistent =
+        bodies.length > 1 && bodies.slice(1).every((b) => nearDup(bodies[0], b));
       const bullets = picked.map((p) => {
         let s = p.s;
         if (!/[。！？；]$/.test(s)) s += "。";
-        return `- ${s}[引用${p.ref}]`;
+        return consistent ? `- ${s}` : `- ${s}[引用${p.ref}]`;
       });
+      let answerBody = bullets.join("\n");
+      if (consistent) {
+        const joined = hits.map((_, i) => `[引用${i + 1}]`).join("与");
+        answerBody += `\n[引用1]\n（注：${joined}结果一致，故回答中仅注明第一条引用）`;
+      }
       const citeMap = hits.map((h, i) => `[引用${i + 1}] ${h.chunk.source}｜${h.chunk.title_path}`);
       const answer =
         "【抽取式整理】以下要点根据检索片段归纳，未经大模型生成改写：\n" +
-        bullets.join("\n") +
+        answerBody +
         "\n\n引用对照：\n" +
         citeMap.join("\n");
       const citations = hits.map((h, i) => ({
@@ -403,7 +420,7 @@ ${formatContext(hits)}
 
 要求：
 1. 优先使用参考资料中的信息，禁止编造
-2. 引用内容请在回答末尾标注[引用N]，如为分点作答，在每点作答末尾标注[引用N]；如果索引内容一致，回答末尾只需标注一条引用标注，并在回答内容后补充提醒：（注：[引用N]与[引用N]结果一致，故回答中仅注明第一条引用）
+2. 引用内容请在回答末尾标注[引用N]，如为分点作答，在每点作答末尾标注[引用N]；如果索引内容一致，回答末尾只需标注一条引用标注，并在回答内容后换行补充提醒：（注：[引用N]与[引用N]结果一致，故回答中仅注明第一条引用）
 3. 若资料矛盾，请指出并说明依据
 4. 回答简洁，控制在300字以内
 
