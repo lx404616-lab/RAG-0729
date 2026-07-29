@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>星澜 RAG 演示 · GitHub Pages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1c2430;
+      --ink-soft: #3d4a5c;
+      --paper: #f3efe6;
+      --line: rgba(28, 36, 48, 0.12);
+      --teal: #0f6e6a;
+      --teal-deep: #0a524f;
+      --amber: #c47a2c;
+      --refuse: #8a3b2f;
+      --ok: #2f6b4f;
+      --shadow: 0 18px 50px rgba(28, 36, 48, 0.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(15, 110, 106, 0.16), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(196, 122, 44, 0.12), transparent 50%),
+        linear-gradient(180deg, #f7f3ea 0%, var(--paper) 45%, #ebe5d8 100%);
+    }
+    .wrap { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 48px; }
+    .brand {
+      font-family: Fraunces, "Noto Serif SC", serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      margin: 0 0 8px;
+      line-height: 1.15;
+    }
+    .brand span { color: var(--teal); }
+    .lead { margin: 0; color: var(--ink-soft); font-size: 1.02rem; max-width: 40em; line-height: 1.7; }
+    .meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px 16px; color: var(--ink-soft); font-size: 0.88rem; }
+    .meta b { color: var(--teal-deep); }
+    .panel {
+      margin-top: 24px;
+      background: rgba(255, 252, 246, 0.82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .mode-switch, .examples { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 18px 0; align-items: center; }
+    .label { color: var(--ink-soft); font-size: 0.88rem; margin-right: 4px; }
+    .mode-btn, .chip {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: rgba(15, 110, 106, 0.12);
+      color: var(--teal-deep);
+      border-color: rgba(15, 110, 106, 0.45);
+    }
+    .chip:hover { color: var(--teal-deep); border-color: rgba(15, 110, 106, 0.35); }
+    .composer { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 16px 18px 18px; }
+    textarea {
+      width: 100%; min-height: 88px; resize: vertical;
+      border: 1px solid var(--line); border-radius: 14px;
+      padding: 14px 16px; font: inherit; color: var(--ink); background: #fffdf8; outline: none;
+    }
+    textarea:focus { border-color: rgba(15, 110, 106, 0.55); box-shadow: 0 0 0 4px rgba(15, 110, 106, 0.12); }
+    .actions { display: flex; flex-direction: column; gap: 8px; }
+    button.primary, button.ghost {
+      border: 0; border-radius: 12px; padding: 12px 16px; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    button.primary { background: linear-gradient(180deg, #14827d, var(--teal)); color: #f7fffe; min-width: 108px; }
+    button.primary:disabled { opacity: 0.55; cursor: wait; }
+    button.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+    .ai-box { padding: 0 18px 8px; display: none; }
+    .ai-box.show { display: block; }
+    .ai-box input {
+      width: 100%; border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; font: inherit; background: #fffdf8;
+    }
+    .hint { color: var(--ink-soft); font-size: 0.82rem; margin-top: 6px; line-height: 1.5; }
+    .result { border-top: 1px solid var(--line); padding: 18px; min-height: 220px; }
+    .empty { color: var(--ink-soft); line-height: 1.7; margin: 28px 8px; }
+    .answer-box { white-space: pre-wrap; line-height: 1.8; font-size: 1.02rem; }
+    .badge {
+      display: inline-flex; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em;
+      margin-bottom: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line);
+    }
+    .badge.ok { color: var(--ok); background: rgba(47, 107, 79, 0.08); }
+    .badge.refuse { color: var(--refuse); background: rgba(138, 59, 47, 0.08); }
+    .badge.mode { color: var(--amber); background: rgba(196, 122, 44, 0.1); margin-left: 8px; }
+    .citations { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
+    .citations h3 { margin: 0 0 10px; font-size: 0.92rem; color: var(--ink-soft); }
+    .cite { padding: 12px 0; border-bottom: 1px solid rgba(28, 36, 48, 0.06); }
+    .cite-title { font-weight: 700; margin-bottom: 4px; }
+    .cite-meta, .cite-snip { color: var(--ink-soft); font-size: 0.86rem; line-height: 1.6; }
+    .loading { display: none; color: var(--teal-deep); font-weight: 500; margin-bottom: 10px; }
+    .loading.show { display: block; }
+    footer { margin-top: 18px; color: var(--ink-soft); font-size: 0.84rem; line-height: 1.6; }
+    footer a { color: var(--teal-deep); }
+    @media (max-width: 640px) {
+      .composer { grid-template-columns: 1fr; }
+      .actions { flex-direction: row; }
+      button.primary, button.ghost { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand">星澜 <span>RAG</span> 演示</h1>
+      <p class="lead">GitHub Pages 静态部署版：浏览器端检索知识库并回答。AI 模式可选用 DeepSeek（需自备 Key；若遇跨域限制请用本地 Flask）。</p>
+      <div class="meta">
+        <span>索引片段：<b id="chunkCount">加载中…</b></span>
+        <span>部署：<b>GitHub Pages</b></span>
+        <span>模式：<b id="genMode">抽取式</b></span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="mode-switch">
+        <span class="label">回答模式</span>
+        <button type="button" class="mode-btn active" data-mode="extractive">抽取式整理</button>
+        <button type="button" class="mode-btn" data-mode="ai">AI 生成（DeepSeek）</button>
+      </div>
+      <div class="ai-box" id="aiBox">
+        <input id="apiKey" type="password" placeholder="可选：粘贴 DeepSeek API Key（仅保存在本机浏览器）" />
+        <div class="hint">Key 只存 localStorage，不会上传到本仓库。浏览器直连 API 可能受 CORS 限制。</div>
+      </div>
+      <div class="examples" id="examples"></div>
+      <div class="composer">
+        <textarea id="question" placeholder="输入问题，例如：标准版和企业版的年度 SLA 分别是多少？"></textarea>
+        <div class="actions">
+          <button class="primary" id="askBtn" type="button">提问</button>
+          <button class="ghost" id="clearBtn" type="button">清空</button>
+        </div>
+      </div>
+      <div class="result">
+        <div class="loading" id="loading">正在检索…</div>
+        <div id="output"><p class="empty">知识库加载后即可提问。默认抽取式可在线演示完整流程。</p></div>
+      </div>
+    </section>
+
+    <footer>
+      完整版（BGE 向量检索 + Flask）请见仓库
+      <a href="https://github.com/lx404616-lab/RAG-0729" target="_blank" rel="noopener">lx404616-lab/RAG-0729</a>
+      ；本地运行：<code>py -3 app.py</code>
+    </footer>
+  </div>
+
+  <script>
+    const REFUSE = "根据现有知识库，我无法回答该问题。";
+    const STOP = new Set(["什么","怎么","如何","是否","可以","请问","一下","多少","哪个","哪些","有没有","是不是","今天","明天","怎么样","为什么","一般","分别","进行","一个","我们","这个","那个","时间","安排","支持","系统","问题","内容"]);
+    const DOMAIN = ["星澜知识库","星澜","知识库","企业版","标准版","个人版","私有化","单点登录","SSO","LDAP","SLA","文档","导入","备份","计划维护","维护","加密","退款","监控","故障","权限","检索","PDF","Word","PPT","TXT","年度SLA","维护窗口"];
+    const EXAMPLES = [
+      "星澜知识库企业版有哪些功能？",
+      "标准版和企业版的年度SLA分别是多少？",
+      "系统支持哪些文档格式导入？",
+      "计划维护一般安排在什么时间？",
+      "今天北京的天气怎么样？",
+    ];
+
+    let kb = null;
+    let answerMode = "extractive";
+    const $ = (id) => document.getElementById(id);
+    const outputEl = $("output");
+    const loadingEl = $("loading");
+    const askBtn = $("askBtn");
+
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        answerMode = btn.dataset.mode;
+        document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b === btn));
+        $("genMode").textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
+        $("aiBox").classList.toggle("show", answerMode === "ai");
+      });
+    });
+
+    EXAMPLES.forEach((text) => {
+      const btn = document.createElement("button");
+      btn.className = "chip";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", () => { $("question").value = text; ask(); });
+      $("examples").appendChild(btn);
+    });
+
+    const savedKey = localStorage.getItem("deepseek_api_key") || "";
+    if (savedKey) $("apiKey").value = savedKey;
+    $("apiKey").addEventListener("change", () => {
+      localStorage.setItem("deepseek_api_key", $("apiKey").value.trim());
+    });
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function extractKeywords(q) {
+      const found = [];
+      for (const t of DOMAIN) if (q.toLowerCase().includes(t.toLowerCase())) found.push(t);
+      const chars = (q.match(/[\u4e00-\u9fff]/g) || []).join("");
+      for (const n of [3, 2]) {
+        for (let i = 0; i <= chars.length - n; i++) {
+          const g = chars.slice(i, i + n);
+          if (!STOP.has(g) && !found.includes(g)) found.push(g);
+        }
+      }
+      (q.match(/[A-Za-z0-9_\-.%]{2,}/g) || []).forEach((t) => { if (!found.includes(t)) found.push(t); });
+      return found;
+    }
+
+    function scoreChunk(chunk, keywords) {
+      const text = `${chunk.title_path}\n${chunk.section}\n${chunk.body}`;
+      let score = 0;
+      for (const k of keywords) {
+        if (!text.includes(k)) continue;
+        score += k.length >= 3 ? 2.2 : 1;
+        if (chunk.title_path.includes(k) || chunk.section.includes(k)) score += 1.5;
+      }
+      if (/\d+(\.\d+)?%|\d{1,2}:\d{2}/.test(chunk.body) && keywords.some((k) => /SLA|维护|退款|时间|多少/.test(k) || /\d/.test(k))) {
+        score += 1.2;
+      }
+      return score;
+    }
+
+    function search(question, topK = 4) {
+      const keywords = extractKeywords(question);
+      if (!keywords.length) return [];
+      const ranked = kb.chunks
+        .map((c) => ({ chunk: c, score: scoreChunk(c, keywords) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topK);
+      const maxScore = ranked[0]?.score || 1;
+      return ranked.map((x) => ({
+        ...x,
+        norm: Math.min(0.95, 0.35 + (x.score / maxScore) * 0.55),
+      }));
+    }
+
+    function cleanSent(s) {
+      return s
+        .replace(/^[\u4e00-\u9fffA-Za-z0-9_\-]{1,20}内容\d+[：:]\s*/, "")
+        .trim();
+    }
+
+    function extractiveAnswer(question, hits) {
+      if (!hits.length || hits[0].norm < (kb.score_threshold || 0.12)) {
+        return { answer: REFUSE, citations: [], can_answer: false, mode: "refuse" };
+      }
+      const keywords = extractKeywords(question);
+      const cands = [];
+      const seen = new Set();
+      hits.forEach((h, idx) => {
+        const sents = h.chunk.body.split(/(?<=[。！？；\n])/);
+        for (let s of sents) {
+          s = cleanSent(s);
+          if (s.length < 12 || seen.has(s)) continue;
+          let sc = keywords.reduce((n, k) => n + (s.includes(k) ? 1 : 0), 0);
+          if (/\d+(\.\d+)?%|\d{1,2}:\d{2}|企业版|标准版|支持PDF|SLA|维护/.test(s)) sc += 2;
+          if (sc > 0) {
+            cands.push({ sc, s, ref: idx + 1 });
+            seen.add(s);
+          }
+        }
+      });
+      cands.sort((a, b) => b.sc - a.sc);
+      const picked = [];
+      for (const c of cands) {
+        if (picked.some((p) => p.s.includes(c.s) || c.s.includes(p.s))) continue;
+        picked.push(c);
+        if (picked.length >= 3) break;
+      }
+      if (!picked.length) {
+        const first = cleanSent(hits[0].chunk.body.split("。")[0] + "。");
+        picked.push({ s: first, ref: 1 });
+      }
+      const bullets = picked.map((p) => {
+        let s = p.s;
+        if (!/[。！？；]$/.test(s)) s += "。";
+        return `- ${s}[引用${p.ref}]`;
+      });
+      const citeMap = hits.map((h, i) => `[引用${i + 1}] ${h.chunk.source}｜${h.chunk.title_path}`);
+      const answer =
+        "【抽取式整理】以下要点根据检索片段归纳，未经大模型生成改写：\n" +
+        bullets.join("\n") +
+        "\n\n引用对照：\n" +
+        citeMap.join("\n");
+      const citations = hits.map((h, i) => ({
+        ref: i + 1,
+        source: h.chunk.source,
+        section: h.chunk.section,
+        title_path: h.chunk.title_path,
+        chunk_id: h.chunk.chunk_id,
+        score: Number(h.norm.toFixed(4)),
+        snippet: h.chunk.body.slice(0, 160).replace(/\n/g, " "),
+      }));
+      return { answer, citations, can_answer: true, mode: "extractive" };
+    }
+
+    function formatContext(hits) {
+      return hits.map((h, i) =>
+        `[引用${i + 1}] 来源=${h.chunk.source}｜路径=${h.chunk.title_path}\n${h.chunk.body}`
+      ).join("\n\n");
+    }
+
+    async function aiAnswer(question, hits) {
+      if (!hits.length || hits[0].norm < (kb.score_threshold || 0.12)) {
+        return { answer: REFUSE, citations: [], can_answer: false, mode: "refuse" };
+      }
+      const key = $("apiKey").value.trim();
+      if (!key) throw new Error("请先填写 DeepSeek API Key，或切换到抽取式模式");
+      localStorage.setItem("deepseek_api_key", key);
+      const prompt = `你是一个严谨的知识库问答助手。请基于以下参考资料回答问题。
+如果参考资料不足以回答问题，必须明确回答："根据现有知识库，我无法回答该问题。"
+
+参考资料：
+${formatContext(hits)}
+
+问题：${question}
+
+要求：
+1. 优先使用参考资料中的信息，不要编造
+2. 引用内容请标注[引用N]
+3. 若资料矛盾，请指出并说明依据
+4. 回答简洁，控制在300字以内
+
+回答：`;
+      const resp = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify({
+          model: "deepseek-v4-flash",
+          messages: [
+            { role: "system", content: "你是一个严谨的知识库问答助手，只依据参考资料作答，不编造。" },
+            { role: "user", content: prompt },
+          ],
+          stream: false,
+          temperature: 0.2,
+          max_tokens: 800,
+        }),
+      });
+      if (!resp.ok) {
+        const t = await resp.text();
+        throw new Error(`DeepSeek 调用失败 (${resp.status}): ${t.slice(0, 180)}`);
+      }
+      const data = await resp.json();
+      const text = (data.choices?.[0]?.message?.content || "").trim();
+      if (!text) throw new Error("模型返回空内容");
+      const refused = text.includes(REFUSE) && text.length < REFUSE.length + 40;
+      const citations = refused ? [] : hits.map((h, i) => ({
+        ref: i + 1,
+        source: h.chunk.source,
+        section: h.chunk.section,
+        title_path: h.chunk.title_path,
+        chunk_id: h.chunk.chunk_id,
+        score: Number(h.norm.toFixed(4)),
+        snippet: h.chunk.body.slice(0, 160).replace(/\n/g, " "),
+      }));
+      return { answer: text, citations, can_answer: !refused, mode: "generative", llm_model: "deepseek-v4-flash" };
+    }
+
+    function renderResult(data) {
+      const badgeClass = data.can_answer ? "ok" : "refuse";
+      const badgeText = data.can_answer ? "可回答" : "无法回答";
+      const modeMap = { generative: "AI生成", extractive: "抽取式", refuse: "拒答" };
+      let html = `
+        <div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="badge mode">${modeMap[data.mode] || data.mode}</span>
+          ${data.llm_model ? `<span class="badge mode">${escapeHtml(data.llm_model)}</span>` : ""}
+          <div class="answer-box">${escapeHtml(data.answer)}</div>
+      `;
+      if (data.citations?.length) {
+        html += `<div class="citations"><h3>引用文档</h3>`;
+        data.citations.forEach((c) => {
+          html += `
+            <div class="cite">
+              <div class="cite-title">[引用${c.ref}] ${escapeHtml(c.source)}</div>
+              <div class="cite-meta">路径：${escapeHtml(c.title_path || c.section || "")} · 相关度：${c.score} · 片段：${escapeHtml(c.chunk_id)}</div>
+              <div class="cite-snip">${escapeHtml(c.snippet || "")}</div>
+            </div>`;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="citations"><h3>引用文档</h3><div class="cite-meta">（无）</div></div>`;
+      }
+      html += `</div>`;
+      outputEl.innerHTML = html;
+    }
+
+    async function ask() {
+      const question = $("question").value.trim();
+      if (!question) { $("question").focus(); return; }
+      if (!kb) { outputEl.innerHTML = `<p class="empty">知识库尚未加载完成</p>`; return; }
+      askBtn.disabled = true;
+      loadingEl.classList.add("show");
+      loadingEl.textContent = answerMode === "ai" ? "正在检索并调用 DeepSeek…" : "正在检索并整理要点…";
+      try {
+        const hits = search(question);
+        const data = answerMode === "ai"
+          ? await aiAnswer(question, hits)
+          : extractiveAnswer(question, hits);
+        renderResult(data);
+      } catch (err) {
+        const msg = String(err.message || err);
+        const corsHint = /Failed to fetch|CORS|NetworkError/i.test(msg)
+          ? "（浏览器跨域限制：请改用抽取式，或本地运行 py -3 app.py）"
+          : "";
+        outputEl.innerHTML = `<p class="empty">出错了：${escapeHtml(msg)} ${corsHint}</p>`;
+      } finally {
+        askBtn.disabled = false;
+        loadingEl.classList.remove("show");
+      }
+    }
+
+    $("askBtn").addEventListener("click", ask);
+    $("clearBtn").addEventListener("click", () => {
+      $("question").value = "";
+      outputEl.innerHTML = `<p class="empty">已清空，可以继续提问。</p>`;
+    });
+    $("question").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
+    });
+
+    fetch("./data/kb.json")
+      .then((r) => {
+        if (!r.ok) throw new Error("加载 kb.json 失败");
+        return r.json();
+      })
+      .then((data) => {
+        kb = data;
+        $("chunkCount").textContent = String(data.chunks?.length || 0);
+        outputEl.innerHTML = `<p class="empty">已加载 ${data.chunks.length} 个知识片段。点击示例或输入问题开始。</p>`;
+      })
+      .catch((err) => {
+        $("chunkCount").textContent = "失败";
+        outputEl.innerHTML = `<p class="empty">知识库加载失败：${escapeHtml(err.message)}</p>`;
+      });
+  </script>
+</body>
+</html>

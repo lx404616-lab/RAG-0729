@@ -49,7 +49,15 @@ py -3 main.py --mode ai -q "企业版年度SLA是多少？"
 py -3 main.py --mode extractive -q "企业版年度SLA是多少？"
 ```
 
-## 运行方式
+## 在线演示（GitHub Pages）
+
+静态网页已部署到 GitHub Pages（浏览器端检索 + 抽取式回答）：
+
+**https://lx404616-lab.github.io/RAG-0729/**
+
+> 说明：GitHub Pages 只能托管静态站点，无法运行 Flask/BGE。在线版使用预导出知识片段做抽取式问答；完整 BGE + DeepSeek 请本地运行 `py -3 app.py`。
+
+若首次部署后打不开，请到仓库 **Settings → Pages → Build and deployment**，Source 选择 **GitHub Actions**，等待 Actions 成功后再访问。
 
 ### Web 网页演示（推荐）
 
