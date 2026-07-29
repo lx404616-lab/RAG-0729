@@ -174,7 +174,7 @@ class VectorIndex:
     def encode_query(self, query: str) -> np.ndarray:
         return self._embed([query], is_query=True)[0]
 
-    def search(self, query: str, top_k: int = 4) -> list[tuple[Chunk, float]]:
+    def search(self, query: str, top_k: int = 5) -> list[tuple[Chunk, float]]:
         """混合检索：内容/路径加权 与 事实句 max-pool 取较大值。"""
         if (
             self.matrix is None
