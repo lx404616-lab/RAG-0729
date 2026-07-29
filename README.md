@@ -1,4 +1,4 @@
-# RAG 知识问答系统
+# 星澜RAG知识问答系统
 
 基于本地 `知识库/` 目录（8 份 Markdown 文档）实现的简单 RAG（Retrieval-Augmented Generation）问答系统。
 
@@ -6,9 +6,9 @@
 
 1. **文档切分并建立向量索引**：Markdown 标题感知切分，注入标题路径；超长段落滑动窗口兜底；使用 **BGE 稠密向量 Embedding** 建索引。
 2. **检索相关内容**：查询侧加 BGE query instruction，按余弦相似度返回 Top-K 片段。
-3. **基于检索结果生成回答**：
-   - **生成式**：配置 `OPENAI_API_KEY` 后，使用规定 Prompt 调用大模型；
-   - **抽取式**：未配置 Key 时，对检索片段做要点整理并标注 `[引用N]`，避免原文整段直出。
+3. **基于检索结果生成回答**（可切换）：
+   - **AI 生成式**：配置 `DEEPSEEK_API_KEY` 后，使用规定 Prompt 调用 **DeepSeek V4 Flash**；
+   - **抽取式**：本地对检索片段做要点整理并标注 `[引用N]`，避免原文整段直出（无需 API Key）。
 4. **展示引用文档**：输出文件名、标题路径、相似度与摘要。
 5. **无法回答时明确说明**：最高相似度 `< 0.55` 时返回「根据现有知识库，我无法回答该问题。」
 
@@ -28,10 +28,10 @@ py -3 -m pip install -r requirements.txt
 |---|---|
 | `numpy` | 向量运算 |
 | `sentence-transformers` / `torch` | 加载 BGE Embedding |
-| `openai` | 可选，生成式回答 |
-| `flask` | Web 演示 |
+| `openai` | 调用 DeepSeek（OpenAI 兼容接口） |
+| `flask` | 本地 Web 演示 |
 
-### （可选）配置大模型（DeepSeek）
+### 配置大模型（DeepSeek）
 
 在项目根目录创建 `.env`（可参考 `.env.example`）：
 
@@ -51,13 +51,15 @@ py -3 main.py --mode extractive -q "企业版年度SLA是多少？"
 
 ## 在线演示（GitHub Pages）
 
-静态网页已部署到 GitHub Pages（浏览器端检索 + 抽取式回答）：
+静态网页已部署到 GitHub Pages（浏览器端检索 + 抽取式；AI 模式可选手动填写 Key）：
 
 **https://lx404616-lab.github.io/RAG-0729/**
 
-> 说明：GitHub Pages 只能托管静态站点，无法运行 Flask/BGE。在线版使用预导出知识片段做抽取式问答；完整 BGE + DeepSeek 请本地运行 `py -3 app.py`。
+> 说明：GitHub Pages 只能托管静态站点，无法运行 Flask/BGE。在线版使用预导出知识片段做问答；完整 BGE + DeepSeek 服务端调用请本地运行 `py -3 app.py`。
 
 若首次部署后打不开，请到仓库 **Settings → Pages → Build and deployment**，Source 选择 **GitHub Actions**，等待 Actions 成功后再访问。
+
+## 运行方式
 
 ### Web 网页演示（推荐）
 
@@ -73,9 +75,16 @@ py -3 app.py
 py -3 main.py --rebuild          # 强制重建 BGE 索引并交互问答
 py -3 main.py -q "企业版年度SLA是多少？"
 py -3 main.py --demo             # 内置演示（含无法回答样例）
+py -3 main.py --mode extractive --demo
 ```
 
-索引保存在 `vector_store/`（`embeddings.npy` + `index_meta.json`）。改模型或切分参数后请加 `--rebuild`。
+索引保存在 `vector_store/`（见下方文件列表）。改模型或切分参数后请加 `--rebuild`。
+
+导出 GitHub Pages 静态知识数据：
+
+```bash
+py -3 scripts/export_static_kb.py
+```
 
 ## 模型及参数
 
@@ -106,11 +115,14 @@ py -3 main.py --demo             # 内置演示（含无法回答样例）
 - 查询侧自动加官方 instruction 前缀；
 - 索引侧同时保存：内容向量、标题路径向量、事实句向量；
 - 检索分 = `max(0.55·内容 + 0.45·路径, 事实句 max-pool)`，提升同义词与关键事实召回；
-- 索引文件：`embeddings.npy` / `path_embeddings.npy` / `fact_embeddings.npy` / `fact_chunk_idx.npy` / `index_meta.json`。
+- 索引文件：
+  - `embeddings.npy`
+  - `path_embeddings.npy`
+  - `fact_embeddings.npy`
+  - `fact_chunk_idx.npy`
+  - `index_meta.json`
 
 字符级 TF-IDF 难以处理同义词与语义泛化；BGE 更适合问答召回。
-
-若已配置 `DEEPSEEK_API_KEY`，生成阶段可走 **AI 生成式**（DeepSeek V4 Flash + 规定 Prompt）；也可在网页/命令行切换为 **抽取式**要点整理（标注 `[引用N]`，非原文整段直出）。
 
 ### 切分策略
 
@@ -144,16 +156,24 @@ py -3 main.py --demo             # 内置演示（含无法回答样例）
 
 ```text
 ├── 任务.txt
-├── 知识库/
-├── config.py
-├── main.py / app.py
-├── templates/index.html
+├── 知识库/                      # 8 份 Markdown 知识库文档
+├── config.py                    # 参数与 .env 加载
+├── main.py                      # CLI 入口
+├── app.py                       # Flask Web 入口
+├── requirements.txt
+├── .env.example                 # 环境变量示例（勿提交真实 Key）
+├── templates/index.html         # 本地 Web 页面
+├── docs/                        # GitHub Pages 静态站
+│   ├── index.html
+│   └── data/kb.json
+├── scripts/export_static_kb.py  # 导出静态知识数据
+├── .github/workflows/pages.yml  # Pages 自动部署
 ├── rag/
-│   ├── chunker.py     # 标题路径切分
-│   ├── indexer.py     # BGE 向量索引
-│   ├── generator.py   # 生成式 / 抽取式
-│   └── pipeline.py
-└── vector_store/      # embeddings.npy + index_meta.json
+│   ├── chunker.py               # 标题路径切分
+│   ├── indexer.py               # BGE 向量索引
+│   ├── generator.py             # AI 生成 / 抽取式
+│   └── pipeline.py              # RAG 流水线
+└── vector_store/                # 本地运行后生成（已 gitignore）
 ```
 
 ## 拒答策略
