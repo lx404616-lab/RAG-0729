@@ -137,8 +137,8 @@
         <button type="button" class="mode-btn" data-mode="ai">AI 生成（DeepSeek）</button>
       </div>
       <div class="ai-box" id="aiBox">
-        <input id="apiKey" type="password" placeholder="可选：粘贴 DeepSeek API Key（仅保存在本机浏览器）" />
-        <div class="hint">Key 只存 localStorage，不会上传到本仓库。浏览器直连 API 可能受 CORS 限制。</div>
+        <input id="apiKey" type="password" placeholder="粘贴 DeepSeek API Key（自动保存在本机浏览器，刷新后仍可用）" autocomplete="off" />
+        <div class="hint" id="keyHint">Key 保存在你自己的浏览器 localStorage，不会上传到 GitHub。换电脑/清缓存后需重新输入。</div>
       </div>
       <div class="examples" id="examples"></div>
       <div class="composer">
@@ -198,11 +198,26 @@
       $("examples").appendChild(btn);
     });
 
-    const savedKey = localStorage.getItem("deepseek_api_key") || "";
-    if (savedKey) $("apiKey").value = savedKey;
-    $("apiKey").addEventListener("change", () => {
-      localStorage.setItem("deepseek_api_key", $("apiKey").value.trim());
-    });
+    const KEY_STORE = "deepseek_api_key";
+    function saveApiKey(value) {
+      const key = (value || "").trim();
+      if (key) localStorage.setItem(KEY_STORE, key);
+      else localStorage.removeItem(KEY_STORE);
+      const hint = $("keyHint");
+      if (hint) {
+        hint.textContent = key
+          ? "✓ 已保存在本机浏览器，下次打开本页会自动填入（不会上传到 GitHub）。"
+          : "Key 保存在你自己的浏览器 localStorage，不会上传到 GitHub。换电脑/清缓存后需重新输入。";
+      }
+    }
+
+    const savedKey = localStorage.getItem(KEY_STORE) || "";
+    if (savedKey) {
+      $("apiKey").value = savedKey;
+      saveApiKey(savedKey);
+    }
+    $("apiKey").addEventListener("input", () => saveApiKey($("apiKey").value));
+    $("apiKey").addEventListener("change", () => saveApiKey($("apiKey").value));
 
     function escapeHtml(str) {
       return String(str)
@@ -327,7 +342,7 @@
       }
       const key = $("apiKey").value.trim();
       if (!key) throw new Error("请先填写 DeepSeek API Key，或切换到抽取式模式");
-      localStorage.setItem("deepseek_api_key", key);
+      saveApiKey(key);
       const prompt = `你是一个严谨的知识库问答助手。请基于以下参考资料回答问题。
 如果参考资料不足以回答问题，必须明确回答："根据现有知识库，我无法回答该问题。"
 
