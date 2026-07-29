@@ -41,7 +41,7 @@
       line-height: 1.15;
     }
     .brand span { color: var(--teal); }
-    .lead { margin: 0; color: var(--ink-soft); font-size: 1.02rem; max-width: 40em; line-height: 1.7; }
+    .lead { margin: 0; color: var(--ink-soft); font-size: 1.02rem; line-height: 1.7; max-width: none; white-space: nowrap; }
     .meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px 16px; color: var(--ink-soft); font-size: 0.88rem; }
     .meta b { color: var(--teal-deep); }
     .panel {
@@ -115,6 +115,7 @@
       .composer { grid-template-columns: 1fr; }
       .actions { flex-direction: row; }
       button.primary, button.ghost { flex: 1; }
+      .lead { white-space: normal; }
     }
   </style>
 </head>
