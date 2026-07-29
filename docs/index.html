@@ -180,16 +180,28 @@
     const loadingEl = $("loading");
     const askBtn = $("askBtn");
 
+    function clearResultPanel(message) {
+      if (loadingEl) loadingEl.classList.remove("show");
+      if (askBtn) askBtn.disabled = false;
+      outputEl.innerHTML = `<p class="empty">${message}</p>`;
+    }
+
+    function setAnswerMode(nextMode) {
+      if (!nextMode || nextMode === answerMode) return;
+      answerMode = nextMode;
+      document.querySelectorAll(".mode-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.mode === nextMode);
+      });
+      $("genMode").textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
+      $("aiBox").classList.toggle("show", answerMode === "ai");
+      const label = answerMode === "ai" ? "AI 生成" : "抽取式";
+      clearResultPanel(`已切换为${label}模式，请重新提问。`);
+    }
+
     document.querySelectorAll(".mode-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const nextMode = btn.dataset.mode;
-        if (nextMode === answerMode) return;
-        answerMode = nextMode;
-        document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b === btn));
-        $("genMode").textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
-        $("aiBox").classList.toggle("show", answerMode === "ai");
-        loadingEl.classList.remove("show");
-        outputEl.innerHTML = `<p class="empty">已切换为${answerMode === "ai" ? "AI 生成" : "抽取式"}模式，请重新提问。</p>`;
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        setAnswerMode(btn.dataset.mode);
       });
     });
 

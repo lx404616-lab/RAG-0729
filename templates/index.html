@@ -385,15 +385,29 @@
     const modeButtons = document.querySelectorAll(".mode-btn");
     let answerMode = "ai";
 
-    modeButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const nextMode = btn.dataset.mode;
-        if (nextMode === answerMode) return;
-        answerMode = nextMode;
-        modeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+    function clearResultPanel(message) {
+      if (loadingEl) loadingEl.classList.remove("show");
+      if (askBtn) askBtn.disabled = false;
+      outputEl.innerHTML = `<p class="empty">${message}</p>`;
+    }
+
+    function setAnswerMode(nextMode, clickedBtn) {
+      if (!nextMode || nextMode === answerMode) return;
+      answerMode = nextMode;
+      modeButtons.forEach((b) => {
+        b.classList.toggle("active", b.dataset.mode === nextMode);
+      });
+      if (genModeEl) {
         genModeEl.textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
-        loadingEl.classList.remove("show");
-        outputEl.innerHTML = `<p class="empty">已切换为${answerMode === "ai" ? "AI 生成" : "抽取式"}模式，请重新提问。</p>`;
+      }
+      const label = answerMode === "ai" ? "AI 生成" : "抽取式";
+      clearResultPanel(`已切换为${label}模式，请重新提问。`);
+    }
+
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        setAnswerMode(btn.dataset.mode, btn);
       });
     });
 

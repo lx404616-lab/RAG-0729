@@ -8,6 +8,8 @@ from flask import Flask, jsonify, render_template, request
 from rag import RAGPipeline
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.jinja_env.auto_reload = True
 pipeline = RAGPipeline()
 pipeline.build_index()
 
