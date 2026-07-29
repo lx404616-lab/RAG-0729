@@ -110,25 +110,37 @@
       gap: 8px;
       padding: 14px 18px 0;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+    }
+
+    .mode-group {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
 
     .mode-switch .label {
       color: var(--ink-soft);
       font-size: 0.88rem;
-      margin-right: 4px;
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
 
     .mode-btn {
+      flex: 1;
+      min-width: 0;
       border: 1px solid var(--line);
       background: #fffdf8;
       color: var(--ink-soft);
-      border-radius: 999px;
-      padding: 8px 14px;
+      border-radius: 6px;
+      padding: 8px 10px;
       font: inherit;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
       transition: background 0.2s, color 0.2s, border-color 0.2s;
     }
 
@@ -327,6 +339,9 @@
       .actions { flex-direction: row; }
       button.primary, button.ghost { flex: 1; }
       .lead { white-space: normal; }
+      .mode-switch { padding: 14px 12px 0; gap: 6px; }
+      .mode-switch .label { font-size: 0.78rem; }
+      .mode-btn { font-size: 0.78rem; padding: 8px 6px; border-radius: 4px; }
     }
   </style>
 </head>
@@ -345,8 +360,10 @@
     <section class="panel">
       <div class="mode-switch">
         <span class="label">回答模式</span>
-        <button type="button" class="mode-btn active" data-mode="ai" id="modeAi">AI 生成（DeepSeek）</button>
-        <button type="button" class="mode-btn" data-mode="extractive" id="modeExtractive">抽取式整理</button>
+        <div class="mode-group">
+          <button type="button" class="mode-btn active" data-mode="ai" id="modeAi">AI生成</button>
+          <button type="button" class="mode-btn" data-mode="extractive" id="modeExtractive">抽取式整理</button>
+        </div>
       </div>
       <div class="examples" id="examples"></div>
       <div class="composer">
