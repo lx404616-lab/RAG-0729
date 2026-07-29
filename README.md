@@ -91,9 +91,13 @@ py -3 main.py --demo             # 内置演示（含无法回答样例）
 | `BGE_MODEL_NAME` | `BAAI/bge-small-zh-v1.5` | 稠密向量模型 |
 | `BGE_QUERY_INSTRUCTION` | `为这个句子生成表示以用于检索相关文章：` | 查询前缀 |
 | `BGE_BATCH_SIZE` | `32` | 编码 batch |
-| `LLM_MODEL` | `gpt-4o-mini` | 生成式模型（需 API Key） |
+| `LLM_MODEL` | `deepseek-v4-flash` | 生成式模型（DeepSeek） |
+| `LLM_BASE_URL` | `https://api.deepseek.com` | DeepSeek API 地址 |
 | `LLM_TEMPERATURE` | `0.2` | 生成温度 |
-| `LLM_MAX_TOKENS` | `600` | 最大生成 token |
+| `LLM_MAX_TOKENS` | `800` | 最大生成 token |
+| `LLM_REASONING_EFFORT` | `high` | DeepSeek 思考强度 |
+| `LLM_ENABLE_THINKING` | `True` | 是否开启 thinking |
+| `DEFAULT_ANSWER_MODE` | `ai` | 默认 `ai` 或 `extractive` |
 
 ### 向量模型说明
 
@@ -106,7 +110,7 @@ py -3 main.py --demo             # 内置演示（含无法回答样例）
 
 字符级 TF-IDF 难以处理同义词与语义泛化；BGE 更适合问答召回。
 
-若已配置 `OPENAI_API_KEY`，生成阶段走 **生成式**（规定 Prompt）；否则走 **抽取式**要点整理（标注 `[引用N]`，非原文整段直出）。
+若已配置 `DEEPSEEK_API_KEY`，生成阶段可走 **AI 生成式**（DeepSeek V4 Flash + 规定 Prompt）；也可在网页/命令行切换为 **抽取式**要点整理（标注 `[引用N]`，非原文整段直出）。
 
 ### 切分策略
 
