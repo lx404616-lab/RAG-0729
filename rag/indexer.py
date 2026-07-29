@@ -67,7 +67,7 @@ class VectorIndex:
         vectors = model.encode(
             payload,
             batch_size=self.batch_size,
-            show_progress_bar=len(payload) > 16,
+            show_progress_bar=False,
             normalize_embeddings=True,
             convert_to_numpy=True,
         )
