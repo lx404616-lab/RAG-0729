@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>星澜 RAG 演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1c2430;
+      --ink-soft: #3d4a5c;
+      --paper: #f3efe6;
+      --paper-2: #e7e1d4;
+      --line: rgba(28, 36, 48, 0.12);
+      --teal: #0f6e6a;
+      --teal-deep: #0a524f;
+      --amber: #c47a2c;
+      --refuse: #8a3b2f;
+      --ok: #2f6b4f;
+      --shadow: 0 18px 50px rgba(28, 36, 48, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(15, 110, 106, 0.16), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(196, 122, 44, 0.12), transparent 50%),
+        linear-gradient(180deg, #f7f3ea 0%, var(--paper) 45%, #ebe5d8 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+    }
+
+    .wrap {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 28px;
+      animation: rise 0.7s ease both;
+    }
+
+    .brand {
+      font-family: Fraunces, "Noto Serif SC", serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0 0 8px;
+      line-height: 1.15;
+    }
+
+    .brand span {
+      color: var(--teal);
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 1.02rem;
+      max-width: 36em;
+      line-height: 1.7;
+    }
+
+    .meta {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+    }
+
+    .meta b {
+      color: var(--teal-deep);
+      font-weight: 700;
+    }
+
+    .panel {
+      background: rgba(255, 252, 246, 0.82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      animation: rise 0.8s ease 0.08s both;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      padding: 14px 18px 0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .mode-switch .label {
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      margin-right: 4px;
+    }
+
+    .mode-btn {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .mode-btn.active {
+      background: rgba(15, 110, 106, 0.12);
+      color: var(--teal-deep);
+      border-color: rgba(15, 110, 106, 0.45);
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 18px 0;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.86rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .chip:hover {
+      background: rgba(15, 110, 106, 0.08);
+      color: var(--teal-deep);
+      border-color: rgba(15, 110, 106, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 16px 18px 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 88px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font: inherit;
+      color: var(--ink);
+      background: #fffdf8;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      border-color: rgba(15, 110, 106, 0.55);
+      box-shadow: 0 0 0 4px rgba(15, 110, 106, 0.12);
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    button.primary,
+    button.ghost {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s, opacity 0.2s;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #14827d, var(--teal));
+      color: #f7fffe;
+      min-width: 108px;
+    }
+
+    button.primary:hover { transform: translateY(-1px); background: linear-gradient(180deg, #17948e, var(--teal-deep)); }
+    button.primary:disabled { opacity: 0.55; cursor: wait; transform: none; }
+
+    button.ghost {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+    }
+
+    button.ghost:hover {
+      color: var(--ink);
+      border-color: rgba(28, 36, 48, 0.28);
+    }
+
+    .result {
+      border-top: 1px solid var(--line);
+      padding: 18px;
+      min-height: 220px;
+      animation: rise 0.75s ease 0.14s both;
+    }
+
+    .empty {
+      color: var(--ink-soft);
+      line-height: 1.7;
+      margin: 28px 8px;
+    }
+
+    .answer-box {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-size: 1.02rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .badge.ok { color: var(--ok); background: rgba(47, 107, 79, 0.08); }
+    .badge.refuse { color: var(--refuse); background: rgba(138, 59, 47, 0.08); }
+    .badge.mode { color: var(--amber); background: rgba(196, 122, 44, 0.1); margin-left: 8px; }
+
+    .citations {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .citations h3 {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    .cite {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(28, 36, 48, 0.06);
+    }
+
+    .cite:last-child { border-bottom: 0; }
+
+    .cite-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .cite-meta {
+      color: var(--ink-soft);
+      font-size: 0.86rem;
+      margin-bottom: 6px;
+    }
+
+    .cite-snip {
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .loading {
+      display: none;
+      color: var(--teal-deep);
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .loading.show { display: block; }
+
+    footer {
+      margin-top: 18px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      animation: rise 0.8s ease 0.2s both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .composer { grid-template-columns: 1fr; }
+      .actions { flex-direction: row; }
+      button.primary, button.ghost { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand">星澜 <span>RAG</span> 演示</h1>
+      <p class="lead">基于本地 8 份知识库文档的轻量问答：切分建索引、检索、生成回答，并展示引用来源。</p>
+      <div class="meta">
+        <span>索引片段：<b id="chunkCount">—</b></span>
+        <span>向量：<b>BGE 稠密向量</b></span>
+        <span>生成：<b id="genMode">DeepSeek / 抽取式</b></span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="mode-switch">
+        <span class="label">回答模式</span>
+        <button type="button" class="mode-btn active" data-mode="ai" id="modeAi">AI 生成（DeepSeek）</button>
+        <button type="button" class="mode-btn" data-mode="extractive" id="modeExtractive">抽取式整理</button>
+      </div>
+      <div class="examples" id="examples"></div>
+      <div class="composer">
+        <textarea id="question" placeholder="输入问题，例如：标准版和企业版的年度 SLA 分别是多少？"></textarea>
+        <div class="actions">
+          <button class="primary" id="askBtn" type="button">提问</button>
+          <button class="ghost" id="rebuildBtn" type="button">重建索引</button>
+        </div>
+      </div>
+      <div class="result">
+        <div class="loading" id="loading">正在检索并生成回答…</div>
+        <div id="output">
+          <p class="empty">点击上方示例问题，或直接输入后提问。可切换 AI 生成 / 抽取式。</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>AI 模式调用 DeepSeek V4 Flash；抽取式为本地要点整理。拒答阈值：BGE 余弦相似度 0.55。</footer>
+  </div>
+
+  <script>
+    const examples = [
+      "星澜知识库企业版有哪些功能？",
+      "标准版和企业版的年度SLA分别是多少？",
+      "系统支持哪些文档格式导入？",
+      "计划维护一般安排在什么时间？",
+      "今天北京的天气怎么样？",
+    ];
+
+    const examplesEl = document.getElementById("examples");
+    const questionEl = document.getElementById("question");
+    const askBtn = document.getElementById("askBtn");
+    const rebuildBtn = document.getElementById("rebuildBtn");
+    const outputEl = document.getElementById("output");
+    const loadingEl = document.getElementById("loading");
+    const chunkCountEl = document.getElementById("chunkCount");
+    const genModeEl = document.getElementById("genMode");
+    const modeButtons = document.querySelectorAll(".mode-btn");
+    let answerMode = "ai";
+
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        answerMode = btn.dataset.mode;
+        modeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+        genModeEl.textContent = answerMode === "ai" ? "DeepSeek AI" : "抽取式";
+      });
+    });
+
+    examples.forEach((text) => {
+      const btn = document.createElement("button");
+      btn.className = "chip";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", () => {
+        questionEl.value = text;
+        ask();
+      });
+      examplesEl.appendChild(btn);
+    });
+
+    async function refreshHealth() {
+      try {
+        const res = await fetch("/api/health");
+        const data = await res.json();
+        chunkCountEl.textContent = data.chunks ?? "—";
+        if (data.llm_model) {
+          genModeEl.textContent = answerMode === "ai"
+            ? `${data.llm_model}`
+            : "抽取式";
+        }
+        if (data.default_mode === "extractive") {
+          answerMode = "extractive";
+          modeButtons.forEach((b) => b.classList.toggle("active", b.dataset.mode === "extractive"));
+        }
+      } catch (_) {
+        chunkCountEl.textContent = "—";
+      }
+    }
+
+    function renderResult(data) {
+      const badgeClass = data.can_answer ? "ok" : "refuse";
+      const badgeText = data.can_answer ? "可回答" : "无法回答";
+      const modeMap = { generative: "AI生成", extractive: "抽取式", refuse: "拒答", llm: "AI生成" };
+      let html = `
+        <div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="badge mode">${modeMap[data.mode] || data.mode}</span>
+          ${data.llm_model ? `<span class="badge mode">${escapeHtml(data.llm_model)}</span>` : ""}
+          <div class="answer-box">${escapeHtml(data.answer)}</div>
+      `;
+
+      if (data.citations && data.citations.length) {
+        html += `<div class="citations"><h3>引用文档</h3>`;
+        data.citations.forEach((c, i) => {
+          html += `
+            <div class="cite">
+              <div class="cite-title">${i + 1}. ${escapeHtml(c.source)}</div>
+              <div class="cite-meta">章节：${escapeHtml(c.section || c.title_path || "")} · 相似度：${c.score} · 片段：${escapeHtml(c.chunk_id)}</div>
+              <div class="cite-snip">${escapeHtml(c.snippet || "")}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="citations"><h3>引用文档</h3><div class="cite-meta">（无）</div></div>`;
+      }
+      html += `</div>`;
+      outputEl.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    async function ask() {
+      const question = questionEl.value.trim();
+      if (!question) {
+        questionEl.focus();
+        return;
+      }
+      askBtn.disabled = true;
+      loadingEl.textContent = answerMode === "ai"
+        ? "正在检索并调用 DeepSeek 生成…"
+        : "正在检索并做抽取式整理…";
+      loadingEl.classList.add("show");
+      try {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, mode: answerMode }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "请求失败");
+        renderResult(data);
+      } catch (err) {
+        outputEl.innerHTML = `<p class="empty">出错了：${escapeHtml(err.message)}</p>`;
+      } finally {
+        askBtn.disabled = false;
+        loadingEl.classList.remove("show");
+        loadingEl.textContent = "正在检索并生成回答…";
+      }
+    }
+
+    async function rebuild() {
+      rebuildBtn.disabled = true;
+      loadingEl.textContent = "正在重建向量索引…";
+      loadingEl.classList.add("show");
+      try {
+        const res = await fetch("/api/rebuild", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "重建失败");
+        chunkCountEl.textContent = data.chunks;
+        outputEl.innerHTML = `<p class="empty">索引已重建，共 ${data.chunks} 个文本块。可以继续提问。</p>`;
+      } catch (err) {
+        outputEl.innerHTML = `<p class="empty">重建失败：${escapeHtml(err.message)}</p>`;
+      } finally {
+        rebuildBtn.disabled = false;
+        loadingEl.textContent = "正在检索并生成回答…";
+        loadingEl.classList.remove("show");
+      }
+    }
+
+    askBtn.addEventListener("click", ask);
+    rebuildBtn.addEventListener("click", rebuild);
+    questionEl.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") ask();
+    });
+
+    refreshHealth();
+  </script>
+</body>
+</html>
