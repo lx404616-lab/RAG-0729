@@ -28,6 +28,14 @@ def _load_dotenv(path: Path) -> None:
 
 _load_dotenv(BASE_DIR / ".env")
 
+# Hugging Face：优先镜像；若本地已有缓存则默认离线，避免连不上 huggingface.co
+os.environ.setdefault("HF_ENDPOINT", os.getenv("HF_ENDPOINT", "https://hf-mirror.com"))
+_HF_CACHE = Path.home() / ".cache" / "huggingface" / "hub" / "models--BAAI--bge-small-zh-v1.5"
+if _HF_CACHE.exists() and os.getenv("HF_HUB_OFFLINE") is None:
+    # 本地已有模型时默认离线加载，不再请求外网校验
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 # 文档切分（Markdown 标题感知 + 滑动窗口兜底）
 CHUNK_SIZE = 480
 CHUNK_OVERLAP = 100
@@ -38,10 +46,11 @@ TOP_K = 4
 SCORE_THRESHOLD = 0.55
 
 # 向量化（BGE 稠密向量 Embedding）
-BGE_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
+BGE_MODEL_NAME = os.getenv("BGE_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
 BGE_QUERY_INSTRUCTION = "为这个句子生成表示以用于检索相关文章："
 BGE_BATCH_SIZE = 32
 BGE_DEVICE = None
+BGE_LOCAL_FILES_ONLY = os.getenv("BGE_LOCAL_FILES_ONLY", "1").strip() not in {"0", "false", "False"}
 
 # 生成模型：DeepSeek V4 Flash（OpenAI 兼容接口）
 LLM_PROVIDER = "deepseek"

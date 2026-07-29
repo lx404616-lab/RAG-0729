@@ -16,7 +16,8 @@
 
 - Python 3.10+
 - 操作系统：Windows / macOS / Linux
-- 首次运行需下载 BGE 模型（约百 MB 级，需网络）
+- 首次运行需下载 BGE 模型（约百 MB 级，需网络）；若本机已有缓存，默认**离线加载**，避免连接 huggingface.co 超时
+- 连不上 Hugging Face 时可设置镜像：`HF_ENDPOINT=https://hf-mirror.com`
 
 ### 安装依赖
 

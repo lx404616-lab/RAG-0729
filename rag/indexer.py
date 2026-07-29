@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -53,11 +54,50 @@ class VectorIndex:
                 "py -3 -m pip install sentence-transformers"
             ) from exc
 
-        kwargs = {}
+        import config
+
+        kwargs: dict = {}
         if self.device:
             kwargs["device"] = self.device
-        self._model = SentenceTransformer(self.model_name, **kwargs)
-        return self._model
+
+        # 1) 优先本地缓存离线加载（避免访问 huggingface.co 超时）
+        local_only = getattr(config, "BGE_LOCAL_FILES_ONLY", True)
+        errors: list[str] = []
+        if local_only:
+            try:
+                self._model = SentenceTransformer(
+                    self.model_name,
+                    local_files_only=True,
+                    **kwargs,
+                )
+                return self._model
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"本地缓存加载失败: {exc}")
+
+        # 2) 再尝试在线（可通过 HF_ENDPOINT 使用镜像）
+        try:
+            # 临时关闭离线开关，允许走镜像下载
+            offline = os.environ.pop("HF_HUB_OFFLINE", None)
+            t_offline = os.environ.pop("TRANSFORMERS_OFFLINE", None)
+            try:
+                self._model = SentenceTransformer(self.model_name, **kwargs)
+                return self._model
+            finally:
+                if offline is not None:
+                    os.environ["HF_HUB_OFFLINE"] = offline
+                if t_offline is not None:
+                    os.environ["TRANSFORMERS_OFFLINE"] = t_offline
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"在线加载失败: {exc}")
+
+        tip = (
+            "无法加载 BGE 模型。可尝试：\n"
+            "  1) 确认本机已有缓存：%USERPROFILE%\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\n"
+            "  2) 设置镜像后重试：set HF_ENDPOINT=https://hf-mirror.com\n"
+            "  3) 强制在线：set BGE_LOCAL_FILES_ONLY=0\n"
+            "错误详情：\n- " + "\n- ".join(errors)
+        )
+        raise RuntimeError(tip)
 
     def _embed(self, texts: list[str], is_query: bool = False) -> np.ndarray:
         model = self._load_model()
