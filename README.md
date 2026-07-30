@@ -16,8 +16,11 @@
 
 - Python 3.10+
 - 操作系统：Windows / macOS / Linux
-- 首次运行需下载 BGE 模型（约百 MB 级，需网络）；若本机已有缓存，默认**离线加载**，避免连接 huggingface.co 超时
-- 连不上 Hugging Face 时可设置镜像：`HF_ENDPOINT=https://hf-mirror.com`
+- **BGE 向量模型**（检索必需；仅有 `vector_store/` 不够）
+  - 项目内有 `models/bge-small-zh-v1.5/` 时离线加载，换机无需访问镜像
+  - 否则首次需联网下载（约 90MB）；可用 `HF_ENDPOINT=https://hf-mirror.com`
+  - 打包到项目内：`py -3 scripts/pack_bge_model.py`
+
 
 ### 安装依赖
 
